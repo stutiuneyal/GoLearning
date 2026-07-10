@@ -40,7 +40,7 @@ func main() {
 	}()
 
 	/*
-		for msg := range messages {} go trnaslates this to. -->
+		for msg := range messages {} go translates this to. -->
 
 		for {
 			msg,ok := <-messages

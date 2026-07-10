@@ -1,0 +1,21 @@
+Project Description
+
+Build a command-line Concurrent Service Health Monitor that continuously checks the status of multiple services in parallel.
+Each service monitor should run in its own goroutine and periodically send a health-check result through a shared channel.
+
+The application should monitor services such as an API service, database service, and messaging service.
+Each health-check result must contain the service name, current status, and the time at which the check was performed.
+
+The monitoring process should run for a fixed duration.
+Once the monitoring timeout is reached, the application must cancel all running goroutines using context.Context,
+wait for them to finish, close the results channel safely, and display a completion message.
+
+The application must demonstrate:
+
+- Running multiple tasks concurrently using goroutines.
+- Sending health-check results through a shared channel.
+- Listening to channel messages using select.
+- Cancelling goroutines using context.WithTimeout.
+- Using sync.WaitGroup to wait for goroutines to finish.
+- Closing a channel only after all sender goroutines have stopped.
+- Gracefully shutting down the application without causing a panic.
