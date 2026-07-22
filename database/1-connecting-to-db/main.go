@@ -39,6 +39,7 @@ func main() {
 	db, err := sql.Open("pgx", connString)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	defer func() {
 		fmt.Println("Closing the database")
@@ -50,6 +51,7 @@ func main() {
 	// verify the connection
 	if err := db.Ping(); err != nil {
 		fmt.Println("Error pinging database ", err)
+		return
 	}
 
 	fmt.Println("Successfully connected to database")
@@ -59,9 +61,11 @@ func main() {
 	// Insert Users
 	if found, err := GetUserByEmail(db, "john@example.com"); err != nil {
 		fmt.Println("User not found: ", err)
+		return
 	} else if !found {
 		if id, err := createUser(db, "John", "jogn@example.com", "1234"); err != nil {
 			fmt.Println(err)
+			return
 		} else {
 			fmt.Println("User Created: ", id)
 		}
@@ -72,6 +76,7 @@ func main() {
 	// get user by id
 	if user, err := GetUserById(db, 1); err != nil {
 		fmt.Println(err)
+		return
 	} else {
 		fmt.Printf("%+v\n", user)
 	}
@@ -79,6 +84,7 @@ func main() {
 	// get all users
 	if users, err := ListUsers(db); err != nil {
 		fmt.Println(err)
+		return
 	} else {
 		fmt.Printf("%#v\n", users)
 	}
