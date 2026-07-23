@@ -45,7 +45,7 @@ func (er *EventRepositoryImpl) Save(event *models.Event) error {
 	defer stmt.Close()
 
 	// insert the row and update the event.Id from the return value
-	if err := stmt.QueryRow(event.Name, event.Description, event.Location, event.Datetime).Scan(&event.Id); err != nil {
+	if err := stmt.QueryRow(event.Name, event.Description, event.Location, event.Datetime, event.UserId).Scan(&event.Id); err != nil {
 		return err
 	}
 
@@ -71,7 +71,7 @@ func (er *EventRepositoryImpl) GetAllEvents(userId int) ([]models.Event, error) 
 
 		var event models.Event
 
-		if err := rows.Scan(&event.Id, &event.Name, &event.Description, &event.Location, &event.Datetime); err != nil {
+		if err := rows.Scan(&event.Id, &event.Name, &event.Description, &event.Location, &event.Datetime, &event.UserId); err != nil {
 			return nil, err
 		}
 
@@ -91,7 +91,7 @@ func (er *EventRepositoryImpl) GetEventById(id, userId int) (models.Event, error
 	var event models.Event
 
 	// since it is a get query we dont need to prepare a statement
-	if err := er.db.QueryRow(query.GetEventByIdQuery, id, userId).Scan(&event.Id, &event.Name, &event.Description, &event.Location, &event.Datetime); err != nil {
+	if err := er.db.QueryRow(query.GetEventByIdQuery, id, userId).Scan(&event.Id, &event.Name, &event.Description, &event.Location, &event.Datetime, &event.UserId); err != nil {
 		return models.Event{}, err
 	}
 

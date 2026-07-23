@@ -22,21 +22,21 @@ CREATE TABLE IF NOT EXISTS events (
 
 const InsertEventQuery = `
 
-INSERT INTO events (name, description, location, dateTime)
-VALUES ($1, $2, $3, $4)
+INSERT INTO events (name, description, location, dateTime, user_id)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 
 `
 
 const GetAllEventsQuery = `
 
-SELECT id,name,description,location,dateTime FROM events WHERE user_id=$1;
+SELECT id,name,description,location,dateTime,user_id FROM events WHERE user_id=$1;
 
 `
 
 const GetEventByIdQuery = `
 
-SELECT id, name, description, location, dateTime FROM events
+SELECT id, name, description, location, dateTime, user_id FROM events
 WHERE id = $1 and user_id=$2;
 
 `
