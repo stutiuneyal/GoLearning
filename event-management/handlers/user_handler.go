@@ -3,10 +3,10 @@ package handlers
 import (
 	"net/http"
 
-	"example.com/learning/gin/dto"
-	tokens "example.com/learning/gin/jwt"
-	"example.com/learning/gin/models"
-	"example.com/learning/gin/repository"
+	"example.com/learning/event-management/dto"
+	tokens "example.com/learning/event-management/jwt"
+	"example.com/learning/event-management/models"
+	"example.com/learning/event-management/repository"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"example.com/learning/gin/db/query"
-	"example.com/learning/gin/models"
+	"example.com/learning/event-management/db/query"
+	"example.com/learning/event-management/models"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"example.com/learning/gin/constants"
-	"example.com/learning/gin/models"
+	"example.com/learning/event-management/constants"
+	"example.com/learning/event-management/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 

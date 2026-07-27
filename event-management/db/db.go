@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"example.com/learning/gin/db/query"
+	"example.com/learning/event-management/db/query"
 )
 
 func CreateTables(db *sql.DB) error {

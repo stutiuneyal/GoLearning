@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"example.com/learning/gin/db/query"
-	"example.com/learning/gin/models"
+	"example.com/learning/event-management/db/query"
+	"example.com/learning/event-management/models"
 )
 
 var _ EventRepository = (*EventRepositoryImpl)(nil)

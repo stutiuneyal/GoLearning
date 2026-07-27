@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"example.com/learning/gin/config"
-	database "example.com/learning/gin/db"
-	"example.com/learning/gin/handlers"
-	"example.com/learning/gin/repository"
-	"example.com/learning/gin/routes"
+	"example.com/learning/event-management/config"
+	database "example.com/learning/event-management/db"
+	"example.com/learning/event-management/handlers"
+	"example.com/learning/event-management/repository"
+	"example.com/learning/event-management/routes"
 	"github.com/gin-gonic/gin"
 )
 

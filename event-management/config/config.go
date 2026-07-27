@@ -3,7 +3,7 @@ package config
 import (
 	"database/sql"
 
-	"example.com/learning/gin/constants"
+	"example.com/learning/event-management/constants"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"example.com/learning/gin/handlers"
+	"example.com/learning/event-management/handlers"
 	"github.com/gin-gonic/gin"
 )
 

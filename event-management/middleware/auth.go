@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	tokens "example.com/learning/gin/jwt"
+	tokens "example.com/learning/event-management/jwt"
 	"github.com/gin-gonic/gin"
 )
 
