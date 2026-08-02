@@ -1,9 +1,8 @@
 package models
 
-type User struct {
-	Id                int
+type Profile struct {
+	UserID            int
 	Email             string
-	Password          string
 	Name              string
 	Bio               string
 	ProfilePictureKey string

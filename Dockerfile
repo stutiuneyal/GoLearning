@@ -1,0 +1,36 @@
+# syntax=docker/dockerfile:1
+
+# ------------------------------------------------------------
+# Stage 1: Build
+# ------------------------------------------------------------
+FROM golang:1.25-alpine AS builder
+WORKDIR /src
+RUN apk add --no-cache ca-certificates git
+COPY go.mod go.sum ./
+RUN go mod download
+COPY event-management ./event-management
+RUN CGO_ENABLE=0 \
+    GOOS=linux\
+    go build \
+    -trimpath \
+    -ldflags="-s -w" \
+    -o /out/event-management \
+    ./event-management
+
+# ------------------------------------------------------------
+# Stage 2: Runtime
+# ------------------------------------------------------------
+FROM alpine:3.22
+RUN apk add --no-cache \
+    ca-certificates \
+    tzdata \
+    && addgroup -S app \
+    && adduser -S -G app app
+WORKDIR /app
+COPY --from=builder \
+    /out/event-management \
+    /app/event-management
+RUN mkdir -p /app/uploads && chown -R app:app /app
+USER app
+EXPOSE 8080
+ENTRYPOINT [ "/app/event-management" ]

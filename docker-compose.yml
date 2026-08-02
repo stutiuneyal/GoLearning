@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: event-management-postgres
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: event-management-api:local
+    container_name: event-management-api
+
+    environment:
+      APP_PORT: ${APP_PORT:-8080}
+
+      DATABASE_URL: >-
+        postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+      UPLOAD_URL_BASE: ${UPLOAD_URL_BASE:-/uploads}
+
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+      S3_BUCKET: ${S3_BUCKET:-}
+
+      DB_MAX_OPEN_CONNECTIONS: ${DB_MAX_OPEN_CONNECTIONS:-10}
+      DB_MAX_IDLE_CONNECTIONS: ${DB_MAX_IDLE_CONNECTIONS:-5}
+
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+    volumes:
+      - profile_uploads:/app/uploads
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    name: event-management-postgres-data
+
+  profile_uploads:
+    name: event-management-profile-uploads

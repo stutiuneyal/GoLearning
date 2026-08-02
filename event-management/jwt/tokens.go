@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"example.com/learning/event-management/constants"
 	"example.com/learning/event-management/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 // GenerateTokens -> generate a JWT for authenticated users
-func GenerateTokens(user models.User) (string, error) {
+func GenerateTokens(user models.User, secret string) (string, error) {
 
 	claims := jwt.MapClaims{
 		"userId": user.Id,
@@ -24,12 +23,12 @@ func GenerateTokens(user models.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// sign this token using the secret key
-	return token.SignedString([]byte(constants.SecretKey))
+	return token.SignedString([]byte(secret))
 
 }
 
 // VerifyToken verifies a JWT and returns the authenticated user's Id
-func VerifyToken(tokenString string) (int, error) {
+func VerifyToken(tokenString, secret string) (int, error) {
 
 	if tokenString == "" {
 		return 0, fmt.Errorf("token is required")
@@ -43,7 +42,7 @@ func VerifyToken(tokenString string) (int, error) {
 				return nil, fmt.Errorf("unexpected signign algorithm: %s", token.Method.Alg())
 			}
 
-			return []byte(constants.SecretKey), nil
+			return []byte(secret), nil
 		},
 
 		// explicit restriction -> that only HS256 is accepted by the parser

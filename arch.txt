@@ -1,0 +1,24 @@
+Users
+  │
+  │ HTTP
+  ▼
+Application Load Balancer
+  │
+  │ forwards traffic to port 8080
+  ▼
+Amazon ECS Service
+Running Go containers on Fargate
+  │
+  ├── Amazon RDS PostgreSQL
+  │
+  ├── Amazon S3
+  │
+  ├── AWS Secrets Manager
+  │
+  └── Amazon CloudWatch
+
+Amazon ECR
+  │
+  │ stores Docker images
+  ▼
+Amazon ECS

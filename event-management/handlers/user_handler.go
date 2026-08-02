@@ -13,19 +13,21 @@ import (
 
 type UserHandler struct {
 	UserRepository repository.UserRepository
+	jwtSecret      string
 }
 
-func NewUserHandler(userRepo repository.UserRepository) *UserHandler {
+func NewUserHandler(userRepo repository.UserRepository, jwtSecret string) *UserHandler {
 	return &UserHandler{
 		UserRepository: userRepo,
+		jwtSecret:      jwtSecret,
 	}
 }
 
 func (u *UserHandler) Signup(c *gin.Context) {
 
-	var user models.User
+	var request dto.SignupRequest
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
 			gin.H{
@@ -36,7 +38,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 
 	// hash the password
-	hashed, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	hashed, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
@@ -47,10 +49,15 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	user.Password = string(hashed)
+	user := models.User{
+		Email:    request.Email,
+		Password: string(hashed),
+		Name:     "",
+		Bio:      "",
+	}
 
 	// save the user
-	if err := u.UserRepository.Save(&user); err != nil {
+	if err := u.UserRepository.Save(c.Request.Context(), &user); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{
@@ -60,20 +67,23 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		return
 	}
 
-	userDto := dto.UserDto{
-		Id:    user.Id,
-		Email: user.Email,
+	userResponse := dto.UserResponse{
+		Id:                user.Id,
+		Email:             user.Email,
+		Name:              user.Name,
+		Bio:               user.Bio,
+		ProfilePictureURL: nil,
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": userDto})
+	c.JSON(http.StatusCreated, gin.H{"user": userResponse})
 
 }
 
 func (u *UserHandler) Login(c *gin.Context) {
 
-	var user models.User
+	var request dto.LoginRequest
 
-	if err := c.ShouldBindJSON(&user); err != nil {
+	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
 			gin.H{
@@ -83,7 +93,12 @@ func (u *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	if err := u.UserRepository.Login(&user); err != nil {
+	user := models.User{
+		Email:    request.Email,
+		Password: request.Password,
+	}
+
+	if err := u.UserRepository.Login(c.Request.Context(), &user); err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{
@@ -93,12 +108,12 @@ func (u *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := tokens.GenerateTokens(user)
+	token, err := tokens.GenerateTokens(user, u.jwtSecret)
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
 			gin.H{
-				"error": err.Error(),
+				"error": "failed to generate authentication token",
 			},
 		)
 	}
