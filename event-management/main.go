@@ -45,7 +45,7 @@ func main() {
 	// Configure local object storage for profile pictures.
 	objectStorage, localStorage, err := buildObjectStorage(context.Background(), appConfig)
 	if err != nil {
-		fmt.Printf("Storage error: %w\n", err)
+		fmt.Printf("Storage error: %v\n", err)
 		os.Exit(1)
 	}
 
