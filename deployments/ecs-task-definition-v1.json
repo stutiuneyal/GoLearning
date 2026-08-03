@@ -1,0 +1,83 @@
+{
+    "family": "event-management-api",
+    "taskRoleArn": "arn:aws:iam::335451552067:role/event-management-api-task-role",
+    "executionRoleArn": "arn:aws:iam::335451552067:role/event-management-task-execution-role",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "containerDefinitions": [
+        {
+            "name": "event-management-api",
+            "image": "335451552067.dkr.ecr.ap-south-1.amazonaws.com/event-management-api:v1",
+            "essential": true,
+            "portMappings": [
+                {
+                    "name": "event-management-api-8080",
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "environment": [
+                {
+                    "name": "APP_PORT",
+                    "value": "8080"
+                },
+                {
+                    "name": "STORAGE_PROVIDER",
+                    "value": "s3"
+                },
+                {
+                    "name": "AWS_REGION",
+                    "value": "ap-south-1"
+                },
+                {
+                    "name": "S3_BUCKET",
+                    "value": "event-management-profile-images-335451552067"
+                },
+                {
+                    "name": "DB_MAX_OPEN_CONNECTIONS",
+                    "value": "10"
+                },
+                {
+                    "name": "DB_MAX_IDLE_CONNECTIONS",
+                    "value": "5"
+                },
+                {
+                    "name": "GIN_MODE",
+                    "value": "release"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "DATABASE_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:335451552067:secret:event-management/prod/database-url-rd0mCN"
+                },
+                {
+                    "name": "JWT_SECRET",
+                    "valueFrom": "arn:aws:secretsmanager:ap-south-1:335451552067:secret:event-management/prod/jwt-secret-bz2ARz"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/event-management-api",
+                    "awslogs-region": "ap-south-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "linuxParameters": {
+                "initProcessEnabled": true
+            },
+            "readonlyRootFilesystem": false
+        }
+    ]
+}

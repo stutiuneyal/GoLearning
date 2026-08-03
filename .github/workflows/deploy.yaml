@@ -1,0 +1,153 @@
+name: Deploy Event Management API
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "event-management/**"
+      - "deployments/**"
+      - "Dockerfile"
+      - "go.mod"
+      - "go.sum"
+      - "main.go"
+      - ".github/workflows/deploy-event-management.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: event-management-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}
+  ECS_TASK_DEFINITION: ${{ vars.ECS_TASK_DEFINITION }}
+
+jobs:
+  validate:
+    name: Validate application
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Verify Go formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          unformatted="$(gofmt -l .)"
+
+          if [ -n "${unformatted}" ]; then
+            echo "The following files are not formatted:"
+            echo "${unformatted}"
+            exit 1
+          fi
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Compile application
+        run: go build ./...
+
+      - name: Validate ECS task-definition JSON
+        run: jq empty "${ECS_TASK_DEFINITION}"
+
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    needs:
+      - validate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure temporary AWS credentials
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: event-management-github-deploy
+
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push immutable image
+        id: build-image
+        shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          image_uri="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+          docker build \
+            --platform linux/amd64 \
+            --tag "${image_uri}" \
+            .
+
+          docker push "${image_uri}"
+
+          echo "image_uri=${image_uri}" >> "${GITHUB_OUTPUT}"
+
+      - name: Render image and version into task definition
+        id: render-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.ECS_CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image_uri }}
+          environment-variables: |
+            APP_VERSION=${{ github.sha }}
+
+      - name: Deploy task definition to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.ECS_SERVICE }}
+          wait-for-service-stability: true
+
+      - name: Verify deployed service
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          aws ecs describe-services \
+            --cluster "${ECS_CLUSTER}" \
+            --services "${ECS_SERVICE}" \
+            --region "${AWS_REGION}" \
+            --query 'services[0].{
+              Status: status,
+              TaskDefinition: taskDefinition,
+              Desired: desiredCount,
+              Running: runningCount,
+              Pending: pendingCount
+            }' \
+            --output table
